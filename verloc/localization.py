@@ -1,6 +1,8 @@
 import numpy as np
 from math import sqrt
 
+import time
+
 from vincenty import vincenty
 
 from colorama import Fore
@@ -31,22 +33,29 @@ class Localizer():
     def prepare_initial_guess(self):
         try:
             ref_poly = geometry.Polygon(self.reference_locations)
-            initial_guess = ref_poly.centroid.coords
+            tmp = ref_poly.centroid.coords
+            if len(tmp) > 0:
+                initial_guess = list(tmp[0])
+            else:
+                initial_guess = [(0,0)]
         except:
-            print (self.reference_locations)
-            initial_guess = (0,0)
-
-        # print ('Initial Guess:', list(initial_guess[0]))
-        return list(initial_guess[0])
+            initial_guess = [(0,0)]
+            
+        return initial_guess
 
     def estimate_location(self):
         initial_guess = self.prepare_initial_guess()
+
         
+
+        start = time.time()
         # method='TNC',
         location_estimate = minimize(self.error_rmse, x0=initial_guess, bounds=self.earth_bounds)
+        end = time.time()
+        duration = end-start
 
-        print ('Localization finished with result', location_estimate.x)
-        return location_estimate.x
+        # print ('Localization finished with result', location_estimate.x)
+        return location_estimate.x, duration
 
 
     def calc_power(self, timing):
