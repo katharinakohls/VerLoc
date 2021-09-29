@@ -13,12 +13,13 @@ def test_measurement_get_min_rtt():
     assert new_measurement.get_min_rtt() == 1
 
 def test_node_get_location():
-    new_node = Node(1, '1.2.3', 10, 20, 33)
+    # node_id, node_key, ip_address, lat, lon, country_code, country
+    new_node = Node(1, 'abc', '1.2.3', 10, 20, 'de', 'Germany')
 
     assert new_node.get_location() == (10,20)
 
 def test_create_nodes():
-    n = Network(1000)
+    n = Network('now', 1000)
 
     assert len(n.network) == 1000
     assert n.network[0].get_location() == (48.3200536664685,17.3730031429023)

@@ -63,18 +63,13 @@ class Measurement():
 
 class Schedule():
     def __init__(self, num_references, network):
-        # ! problem: we might get references that are not in the network
-
         # initialize empty reference dict once
         # otherwise we'd overwrite references with empty lists later
         references = {}
         for node in network:
             references[node] = []
 
-        # the real-world network doesn't have continuous node ids so we can't use the simple range list
-        # base_refs = list(range(1, len(network)+1))
-
-        # instead, use the list of ids in our network as search space for random references
+        # use the list of ids in our network as search space for random references
         for node_id in network:
             node = network[node_id]
             
@@ -96,17 +91,12 @@ class Schedule():
                             filtered_refs.append(candidate)
                             locations.append(ref_loc)
 
-                # filtered_refs = [x for x in node.get_available_references() if (x not in references[node_id] and x != node_id)]
-
                 iter_cnt = iter_cnt + 1
                 if iter_cnt > 10:
                     break
 
                 shuffle(filtered_refs)
                 references[node_id].extend(filtered_refs[:missing_references])
-                
-            # ---------------------------------------------------------------------------
-            # references[node_id] = node.get_available_references()
 
             """
             We do symmetric measurements, so we can assume that if a measures b, then b measures a.
@@ -123,9 +113,6 @@ class Schedule():
                         references[r].append(node_id)
                 except Exception as e:
                     print (e)
-
-        # for node in references:
-        #     print (len(references[node]), '/', num_references)
 
         self.schedule = references
 
@@ -149,13 +136,15 @@ class Schedule():
 class TimingData():
     def __init__(self, timestamp):
         # uses the parsed real-world measurements
-        self.propagation = pd.read_csv('../parser/static_data/melted_propagation_{}.csv'.format(timestamp))
+
+        # uses today's measurements
+        # self.propagation = pd.read_csv('../parser/static_data/melted_propagation_{}.csv'.format(timestamp))
+
+        # used in the experimental eval of the USENIX'22 paper
+        self.propagation = pd.read_csv('../parser/static_data/melted_propagation_25-06-2021.csv')
         
         self.propagation['distances'] = self.propagation['distances'] / 1000
         self.propagation['speeds'] = self.propagation['speeds'] / 1000
-
-        # uses the simulated inputs
-        # self.propagation = pd.read_csv('/home/kk/Documents/Repos/2021-verloc-prototype/input_simulation/propagation.csv')
 
     def define_available_references(self, network):
         for node_id in network:
@@ -170,8 +159,6 @@ class TimingData():
             node.set_available_references(list(set(available_references)))
 
     def assign_timings_to_network(self, schedule, network):
-        # ! this is not safe, it depends on the correct ordering of the network list
-
         for node in schedule:
             for ref in schedule[node]:
 
@@ -193,7 +180,12 @@ class TimingData():
 class Network():
     def __init__(self, timestamp, num_nodes):
         # uses the parsed real-world measurements
-        node_locations = pd.read_csv('../parser/static_data/eu_node_identities_{}.csv'.format(timestamp))
+
+        # uses today's measurements
+        # node_locations = pd.read_csv('../parser/static_data/eu_node_identities_{}.csv'.format(timestamp))
+
+        # used in the experimental eval of the USENIX'22 paper
+        node_locations = pd.read_csv('../parser/static_data/eu_node_identities_25-06-2021.csv')
 
         self.lats = list(node_locations['lat'])
         self.lons = list(node_locations['lon'])
@@ -203,14 +195,7 @@ class Network():
         self.keys = list(node_locations['identity_key'])
         self.countries = list(node_locations['country'])
 
-        # uses the simulated inputs
-        # node_locations = pd.read_csv('/home/kk/Documents/Repos/2021-verloc-prototype/input_simulation/node_locations.csv')
-        # lats = list(node_locations['PhysLat'])
-        # lons = list(node_locations['PhysLon'])
-        # ccs  = list(node_locations['PhysCC'])
-
         network = {}
-        # for i in range(0, len(self.lats)):
         for i in range(0, num_nodes):
             n = Node(self.ids[i], self.keys[i], self.ips[i], self.lats[i], self.lons[i], self.ccs[i], self.countries[i])
             network[self.ids[i]] = n
@@ -219,3 +204,4 @@ class Network():
 
     def get_network(self):
         return self.network
+        

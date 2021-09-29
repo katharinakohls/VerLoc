@@ -42,7 +42,7 @@ def loc_performance_object():
 
 @pytest.fixture
 def net_object(network_size):
-    net = Network(network_size)
+    net = Network('now', network_size)
     return net.get_network()
 
 @pytest.fixture

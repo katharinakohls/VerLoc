@@ -54,7 +54,7 @@ def run_localization(num_references, network, timing_measurements, process_id):
 def main():
     num_references = 40
     num_nodes = 512
-    num_cores = 64
+    num_cores = 16
 
     today = date.today()
     timestamp = today.strftime('%d-%m-%Y')

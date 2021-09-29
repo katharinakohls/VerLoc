@@ -2,7 +2,6 @@ import numpy as np
 
 from math import exp
 from scipy import constants
-from pynverse import inversefunc
 
 class Propagation():
     # ! units of distance and time

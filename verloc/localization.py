@@ -18,8 +18,9 @@ from propagation import Propagation
 class Localizer():
     def __init__(self, my_times, their_times, reference_locations):
         # self.earth_bounds = Bounds([-90, -180], [90, 180])
+
+        # limit the search space to Europe because we focus on Eiropean nodes
         self.earth_bounds = Bounds([27.6375, -18.1706],[60.8444, 40.1797])
-        # self.method = min_method
 
         # all of the following are static items that stay the same during the optimization
         self.my_times = my_times
@@ -46,17 +47,13 @@ class Localizer():
     def estimate_location(self):
         initial_guess = self.prepare_initial_guess()
 
-        
-
+        # record timings to measure the overhead
         start = time.time()
-        # method='TNC',
         location_estimate = minimize(self.error_rmse, x0=initial_guess, bounds=self.earth_bounds)
         end = time.time()
         duration = end-start
 
-        # print ('Localization finished with result', location_estimate.x)
         return location_estimate.x, duration
-
 
     def calc_power(self, timing):
         return np.power(timing, sqrt(1))
@@ -86,19 +83,10 @@ class Localizer():
         # apply propagation function to estimated distances
         estimate_speeds = np.array([prop_model.get_time(x) for x in estimate_distances])
 
-        # print ('Estimate Distances:', estimate_distances)
-
         # average measured time of outgoing and incoming measurements
         self.mean_prop_time = self.calc_mean_prop_time()
 
-        # print ('Mean Prop Time:', self.mean_prop_time)
-
-        # ? how it should be
-        # self.measured_distances = [prop_model.get_dist(x) for x in self.mean_prop_time]
-        # ? following the matlab implementation
         self.measured_distances = self.mean_prop_time * estimate_speeds
-
-        # print ('Measured Distances:', self.measured_distances)
 
         try:
             # difference between measured and estimated distances
@@ -115,13 +103,11 @@ class Localizer():
     def error_rmse(self, location_estimate):
         base_error = self.get_distance_error(location_estimate)
 
-        # print ('Base Error:', base_error)
-
         # base_error and mean_prop_time need to be np.ndarray
         try:
             error = base_error * ( (1 / self.calc_power(self.mean_prop_time)) / norm( (1 / self.calc_power(self.mean_prop_time)), 1))
             rmse = sqrt(np.mean(np.power(error, 2)))
         except Exception as e:
-            print (Fore.RED + 'ERROR {}: error or timing in the wrong format: error is {}, timing is {}'.format(e, type(base_error), type(mean_prop_time)))
+            print (Fore.RED + 'ERROR {}: error or timing in the wrong format: error is {}, timing is {}'.format(e, type(base_error), type(self.mean_prop_time)))
 
         return rmse

@@ -28,11 +28,14 @@ class LocalizationPerformance():
         return self.cc_accuracy
                 
     def compute_location_error(self):
-        loc_error = {'location_error': [], 'confidence': [], 'slow': [], 'fast': [], 'comp': []}
+        loc_error = {'identity_key': [], 'node_id': [], 'location_error': [], 'confidence': [], 'slow': [], 'fast': [], 'comp': []}
 
         conf = list(self.confidence_scores['score'])
         fast = list(self.confidence_scores['fast'])
         slow = list(self.confidence_scores['slow'])
+
+        node_ids = list(self.confidence_scores['node_id'])
+        identity_keys = list(self.confidence_scores['identity_key'])
 
         for idx, phy in enumerate(self.physical_locations):
             est = self.estimated_locations[idx]
@@ -41,6 +44,9 @@ class LocalizationPerformance():
             except:
                 err = -1
 
+            loc_error['identity_key'].append(identity_keys[idx])
+            loc_error['node_id'].append(node_ids[idx])
+
             loc_error['location_error'].append(err)
             loc_error['confidence'].append(conf[idx])
             loc_error['slow'].append(slow[idx])
@@ -48,6 +54,8 @@ class LocalizationPerformance():
             loc_error['comp'].append(self.comutation_timing[idx])
 
         self.location_error = pd.DataFrame.from_dict(loc_error)
+
+        # TODO file name currently focuses on r=40 and should be adjusted if changes to the params are made
         self.location_error.to_csv('mp/{}_location_error_r40.csv'.format(self.process_id), sep=',', index=False)
 
     def write_stats(self):
